@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS Cloud Practitioner — Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ─── DESIGN TOKENS ─────────────────────────────────────────────── */
+  :root {
+    --bg:       #f0f4ff;
+    --surface:  #ffffff;
+    --card:     #f7f9ff;
+    --border:   #d0d8f5;
+    --accent:   #6c63ff;
+    --accent2:  #a78bfa;
+    --text:     #1e1b4b;
+    --muted:    #6b7280;
+    --correct:  #059669;
+    --wrong:    #dc2626;
+    --radius:   10px;
+    --mono:     'Space Mono', monospace;
+    --sans:     'DM Sans', sans-serif;
+  }
+
+  /* ─── RESET & BASE ───────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; scroll-behavior: smooth; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 20% -10%, rgba(167,139,250,.25) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 10%, rgba(251,191,36,.2) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 50% 100%, rgba(108,99,255,.1) 0%, transparent 60%);
+  }
+
+  /* ─── SCREENS ────────────────────────────────────────────────────── */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
+
+  /* ─── START SCREEN ───────────────────────────────────────────────── */
+  #screen-start .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 48px 40px;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 24px 64px rgba(108,99,255,.12);
+    animation: fadeUp .5s ease both;
+  }
+  .logo-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(108,99,255,.1);
+    border: 1px solid rgba(108,99,255,.3);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .1em;
+    padding: 5px 12px;
+    border-radius: 100px;
+    margin-bottom: 24px;
+  }
+  .logo-badge::before { content: '▶'; font-size: .6rem; }
+  h1 {
+    font-family: var(--mono);
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  h1 span { color: var(--accent); }
+  .subtitle { color: var(--muted); font-size: .9rem; margin-bottom: 36px; font-weight: 300; }
+
+  .field { margin-bottom: 20px; }
+  label { display: block; font-size: .8rem; font-family: var(--mono); color: var(--muted); letter-spacing: .06em; margin-bottom: 8px; }
+  input[type="number"] {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 1.1rem;
+    padding: 12px 16px;
+    outline: none;
+    transition: border-color .2s;
+    appearance: textfield;
+  }
+  input[type="number"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,153,0,.15); }
+  input[type="number"]::-webkit-inner-spin-button { display: none; }
+
+  .error-msg { color: var(--wrong); font-size: .78rem; margin-top: 6px; font-family: var(--mono); display: none; }
+  .error-msg.show { display: block; }
+
+  .btn-primary {
+    width: 100%; padding: 14px;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: .9rem;
+    letter-spacing: .06em;
+    border: none; border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .2s, transform .1s;
+    margin-top: 8px;
+  }
+  .btn-primary:hover { background: var(--accent2); color: #fff; }
+  .btn-primary:active { transform: scale(.98); }
+
+  .info-row {
+    display: flex; gap: 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-top: 24px;
+  }
+  .info-row span { font-size: .78rem; color: var(--muted); font-family: var(--mono); }
+  .info-row strong { color: var(--accent); }
+
+  /* ─── QUIZ SCREEN ────────────────────────────────────────────────── */
+  #screen-quiz { padding: 0; }
+  .quiz-shell {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .quiz-topbar {
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    gap: 16px;
+  }
+  .quiz-topbar .brand { font-family: var(--mono); font-size: .8rem; color: var(--accent); letter-spacing: .06em; white-space: nowrap; }
+  .progress-wrap { flex: 1; max-width: 400px; }
+  .progress-label { font-size: .72rem; font-family: var(--mono); color: var(--muted); margin-bottom: 5px; display: flex; justify-content: space-between; }
+  .progress-bar { height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 99px; transition: width .4s ease; }
+  .timer-box {
+    font-family: var(--mono); font-size: 1rem; font-weight: 700;
+    color: var(--text);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 14px;
+    min-width: 80px; text-align: center;
+    transition: color .3s, border-color .3s;
+    white-space: nowrap;
+  }
+  .timer-box.warning { color: var(--wrong); border-color: var(--wrong); animation: pulse 1s ease infinite; }
+
+  .quiz-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 24px;
+  }
+  .question-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px 40px;
+    max-width: 740px;
+    width: 100%;
+    box-shadow: 0 12px 40px rgba(108,99,255,.1);
+    animation: fadeUp .3s ease both;
+  }
+  .q-number {
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--accent);
+    letter-spacing: .1em;
+    margin-bottom: 14px;
+  }
+  .q-text {
+    font-size: 1.05rem;
+    font-weight: 500;
+    line-height: 1.65;
+    margin-bottom: 28px;
+    color: var(--text);
+  }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    cursor: pointer;
+    transition: border-color .2s, background .2s, transform .1s;
+    user-select: none;
+  }
+  .option:hover { border-color: var(--accent); background: rgba(108,99,255,.06); }
+  .option.selected { border-color: var(--accent); background: rgba(108,99,255,.1); }
+  /* multi-select checkbox indicator */
+  .option-key.checkbox { border-radius: 5px; transition: background .15s, color .15s; }
+  .option.selected .option-key.checkbox { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .multi-hint {
+    font-family: var(--mono); font-size: .7rem; color: var(--accent);
+    background: rgba(108,99,255,.08); border: 1px solid rgba(108,99,255,.2);
+    border-radius: 100px; padding: 3px 12px; display: inline-block; margin-bottom: 14px;
+  }
+  .option-key {
+    font-family: var(--mono);
+    font-size: .78rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(108,99,255,.12);
+    border: 1px solid rgba(108,99,255,.25);
+    border-radius: 5px;
+    min-width: 26px; height: 26px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .option-text { font-size: .95rem; line-height: 1.5; color: var(--text); }
+
+  .quiz-nav {
+    display: flex; justify-content: flex-end; gap: 12px;
+    margin-top: 32px; max-width: 740px; width: 100%;
+  }
+  .btn-nav {
+    padding: 11px 28px;
+    font-family: var(--mono); font-size: .82rem; font-weight: 700;
+    border-radius: var(--radius); border: none; cursor: pointer;
+    transition: background .2s, transform .1s;
+    letter-spacing: .04em;
+  }
+  .btn-nav:active { transform: scale(.97); }
+  .btn-nav.secondary {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-nav.secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-nav.primary { background: var(--accent); color: #fff; }
+  .btn-nav.primary:hover { background: var(--accent2); }
+  .btn-nav.danger { background: var(--wrong); color: #fff; }
+  .btn-nav.danger:hover { background: #ff6b6b; }
+
+  /* ─── RESULT SCREEN ──────────────────────────────────────────────── */
+  #screen-result {
+    padding: 40px 24px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+  }
+  .result-header {
+    max-width: 740px; width: 100%;
+    text-align: center;
+    margin-bottom: 36px;
+    animation: fadeUp .4s ease both;
+  }
+  .score-circle {
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    border: 4px solid var(--border);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    margin: 0 auto 24px;
+    position: relative;
+    background: var(--surface);
+  }
+  .score-circle svg { position: absolute; top: -4px; left: -4px; width: calc(100% + 8px); height: calc(100% + 8px); transform: rotate(-90deg); }
+  .score-circle circle { fill: none; stroke-width: 4; stroke-linecap: round; }
+  .score-circle .bg-ring { stroke: var(--border); }
+  .score-circle .fg-ring { stroke: var(--accent); transition: stroke-dashoffset 1.2s ease; }
+  .score-pct { font-family: var(--mono); font-size: 2.2rem; font-weight: 700; color: var(--accent); line-height: 1; }
+  .score-label { font-size: .7rem; color: var(--muted); font-family: var(--mono); letter-spacing: .06em; margin-top: 4px; }
+
+  .result-title { font-family: var(--mono); font-size: 1.3rem; font-weight: 700; margin-bottom: 6px; }
+  .result-subtitle { color: var(--muted); font-size: .9rem; }
+
+  .stats-row {
+    display: flex; gap: 16px; justify-content: center;
+    margin-top: 24px; flex-wrap: wrap;
+  }
+  .stat-pill {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 8px 20px;
+    font-family: var(--mono); font-size: .8rem;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .stat-pill .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot.correct { background: var(--correct); }
+  .dot.wrong   { background: var(--wrong);   }
+  .dot.skip    { background: var(--muted);   }
+
+  /* personalised message placeholder */
+  .personal-msg {
+    max-width: 740px; width: 100%;
+    background: linear-gradient(135deg, rgba(108,99,255,.08), rgba(167,139,250,.05));
+    border: 1px solid rgba(108,99,255,.25);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 32px;
+    display: none;
+  }
+  #screen-result.active .personal-msg {
+    display: block;
+    animation: fadeUp .5s .15s ease both;
+  }
+  .personal-msg .pm-label { font-family: var(--mono); font-size: .68rem; color: var(--accent); letter-spacing: .1em; margin-bottom: 8px; }
+  .personal-msg .pm-text  { font-size: .95rem; color: var(--text); line-height: 1.6; }
+
+  /* review list */
+  .review-section { max-width: 740px; width: 100%; animation: fadeUp .4s .1s ease both; }
+  .review-section h2 { font-family: var(--mono); font-size: 1rem; color: var(--muted); letter-spacing: .06em; margin-bottom: 20px; }
+  .review-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 24px;
+    margin-bottom: 12px;
+    transition: border-color .2s;
+  }
+  .review-item.correct-item { border-left: 4px solid var(--correct); }
+  .review-item.wrong-item   { border-left: 4px solid var(--wrong);   }
+  .review-item.skip-item    { border-left: 4px solid var(--muted);   }
+  .review-status {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--mono); font-size: .7rem; letter-spacing: .06em;
+    padding: 3px 10px; border-radius: 100px; margin-bottom: 12px;
+  }
+  .status-correct { background: rgba(63,185,80,.15); color: var(--correct); }
+  .status-wrong   { background: rgba(248,81,73,.15);  color: var(--wrong);  }
+  .status-skip    { background: rgba(139,148,158,.15);color: var(--muted);  }
+  .review-q { font-size: .95rem; font-weight: 500; margin-bottom: 14px; line-height: 1.55; }
+  .review-answers { display: flex; flex-direction: column; gap: 6px; font-size: .85rem; }
+  .review-ans { display: flex; gap: 8px; align-items: flex-start; }
+  .review-ans .lbl { font-family: var(--mono); font-size: .72rem; color: var(--muted); white-space: nowrap; padding-top: 2px; min-width: 60px; }
+  .review-ans .val { color: var(--text); line-height: 1.5; }
+  .review-ans .val.c { color: var(--correct); }
+  .review-ans .val.w { color: var(--wrong); }
+  .review-tag {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 6px;
+    font-size: .82rem;
+    margin: 2px 3px 2px 0;
+    font-family: var(--sans);
+    line-height: 1.5;
+  }
+  .correct-tag { background: rgba(5,150,105,.12); color: var(--correct); border: 1px solid rgba(5,150,105,.25); }
+  .wrong-tag   { background: rgba(220,38,38,.1);  color: var(--wrong);   border: 1px solid rgba(220,38,38,.2); }
+
+  .result-actions { display: flex; gap: 12px; justify-content: center; margin: 32px 0; flex-wrap: wrap; }
+  .btn-reset {
+    padding: 12px 32px;
+    font-family: var(--mono); font-weight: 700; font-size: .85rem; letter-spacing: .06em;
+    border-radius: var(--radius); border: 2px solid var(--accent);
+    color: var(--accent); background: transparent; cursor: pointer;
+    transition: background .2s, color .2s;
+  }
+  .btn-reset:hover { background: var(--accent); color: #000; }
+
+  /* ─── ANIMATIONS ─────────────────────────────────────────────────── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50%      { opacity: .6; }
+  }
+
+  /* ─── RESPONSIVE ─────────────────────────────────────────────────── */
+  @media (max-width: 600px) {
+    #screen-start .card { padding: 32px 22px; }
+    .question-card { padding: 24px 20px; }
+    .quiz-topbar { padding: 10px 14px; }
+    .brand { display: none; }
+    .q-text { font-size: .95rem; }
+    .stats-row { gap: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SCREEN 1 — START
+═══════════════════════════════════════════════════════════════════ -->
+<div id="screen-start" class="screen active">
+  <div class="card">
+    <div class="logo-badge">AWS CERTIFIED CLOUD PRACTITIONER</div>
+    <h1>Practice <span>Quiz</span></h1>
+    <p class="subtitle">Hey Sakhi!!☺️🌻 Kasa suru aahe preparation? Hi website tuza sathi banvli aahe , yat khup sare questions takun thevle aahe me swatah shodhun. Time limit and number of questions tak and you are good to go. This is when me call vr tuzi practise naih gheu shakat. Chan prepare kar haa... afterall sobat asaycha aahe na punyat aaplyala? For you Sakhi from your Sakha❤️</p>
+
+    <div class="field">
+      <label for="input-time">TIME LIMIT (MINUTES)</label>
+      <input type="number" id="input-time" placeholder="e.g. 90" min="1" max="300" value="90">
+      <div class="error-msg" id="err-time">Please enter a time between 1 and 300 minutes.</div>
+    </div>
+    <div class="field">
+      <label for="input-count">NUMBER OF QUESTIONS</label>
+      <input type="number" id="input-count" placeholder="e.g. 65" min="1" max="500" value="65">
+      <div class="error-msg" id="err-count">Please enter a number between 1 and 500.</div>
+    </div>
+
+    <button class="btn-primary" id="btn-start">START QUIZ →</button>
+
+    <div class="info-row">
+      <span>Question bank: <strong id="bank-count">65</strong> questions</span>
+      <span style="margin-left:auto">Passing score: <strong>70%</strong></span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SCREEN 2 — QUIZ
+═══════════════════════════════════════════════════════════════════ -->
+<div id="screen-quiz" class="screen">
+  <div class="quiz-shell">
+    <div class="quiz-topbar">
+      <div class="brand">AWS CCP QUIZ</div>
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span id="prog-text">Question 1 of 65</span>
+          <span id="prog-pct">0%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+      </div>
+      <div class="timer-box" id="timer-display">90:00</div>
+    </div>
+
+    <div class="quiz-body">
+      <div class="question-card">
+        <div class="q-number" id="q-number">QUESTION 1 OF 65</div>
+        <div class="q-text" id="q-text"></div>
+        <div class="options" id="q-options"></div>
+      </div>
+
+      <div class="quiz-nav">
+        <button class="btn-nav secondary" id="btn-prev">← PREV</button>
+        <button class="btn-nav primary" id="btn-next">NEXT →</button>
+        <button class="btn-nav danger" id="btn-submit" style="display:none">SUBMIT QUIZ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SCREEN 3 — RESULTS
+═══════════════════════════════════════════════════════════════════ -->
+<div id="screen-result" class="screen">
+  <!-- Score summary -->
+  <div class="result-header">
+    <div class="score-circle" id="score-circle">
+      <svg viewBox="0 0 168 168" xmlns="http://www.w3.org/2000/svg">
+        <circle class="bg-ring" cx="84" cy="84" r="78"/>
+        <circle class="fg-ring" id="ring-arc" cx="84" cy="84" r="78"
+                stroke-dasharray="490" stroke-dashoffset="490"/>
+      </svg>
+      <div class="score-pct" id="score-pct">0%</div>
+      <div class="score-label">SCORE</div>
+    </div>
+    <div class="result-title" id="result-title">Quiz Complete!</div>
+    <div class="result-subtitle" id="result-subtitle"></div>
+    <div class="stats-row">
+      <div class="stat-pill"><div class="dot correct"></div><span id="stat-correct">0 Correct</span></div>
+      <div class="stat-pill"><div class="dot wrong"></div><span id="stat-wrong">0 Incorrect</span></div>
+      <div class="stat-pill"><div class="dot skip"></div><span id="stat-skip">0 Skipped</span></div>
+    </div>
+  </div>
+
+  <!-- ── PERSONALISED MESSAGE PLACEHOLDER ─────────────────────────
+       Customise this section with a message tailored to the student.
+       You can programmatically set it via setPersonalMessage(msg) or
+       edit the default text directly below.
+  ──────────────────────────────────────────────────────────────── -->
+  <div class="personal-msg" id="personal-msg">
+    <div class="pm-label"> MESSAGE FROM YOUR SAKHA</div>
+    <div class="pm-text" id="personal-msg-text">
+       Keep going sakhi , me aahe tuzya sobat in every step of yours. Chan Practice kar. All the best my sakhuu...
+    </div>
+  </div>
+
+  <div class="result-actions">
+    <button class="btn-reset" id="btn-retry">↺ RETAKE QUIZ</button>
+  </div>
+
+  <!-- Full review -->
+  <div class="review-section">
+    <h2 id="review-heading">// QUESTIONS TO REVIEW</h2>
+    <div id="review-list"></div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   QUESTION BANK
+   ─ Add/edit questions here. Each entry:
+     { q: "Question text", options: ["A","B","C","D"], answer: "Correct answer" }
+   ─ Supports any number of options per question.
+═══════════════════════════════════════════════════════════════════ */
+const QUESTION_BANK = [
+  { q: "AWS allows users to manage their resources using a web based user interface. What is the name of this interface?", options: ["AWS CLI.","AWS API.","AWS SDK.","AWS Management Console."], answer: ["AWS Management Console."] },
+{ q: "Which of the following is an example of horizontal scaling in the AWS Cloud?", options: ["Replacing an existing EC2 instance with a larger, more powerful one.","Increasing the compute capacity of a single EC2 instance to address the growing demands of an application.","Adding more RAM capacity to an EC2 instance.","Adding more EC2 instances of the same size to handle an increase in traffic."], answer: ["Adding more EC2 instances of the same size to handle an increase in traffic."] },
+{ q: "You have noticed that several critical Amazon EC2 instances have been terminated. Which AWS service would help you determine who took this action?", options: ["Amazon Inspector.","AWS CloudTrail.","AWS Trusted Advisor.","EC2 Instance Usage Report."], answer: ["AWS CloudTrail."] },
+{ q: "Which of the below options are related to the reliability of AWS? (Choose TWO)", options: ["Applying the principle of least privilege to all AWS resources.","Automatically provisioning new resources to meet demand.","All AWS services are considered Global Services.","Providing compensation to customers if issues occur.","Ability to recover quickly from failures."], answer: ["Automatically provisioning new resources to meet demand.","Ability to recover quickly from failures."] },
+{ q: "Which statement is true regarding the AWS Shared Responsibility Model?", options: ["Responsibilities vary depending on the services used.","Security of the IaaS services is the responsibility of AWS.","Patching the guest OS is always the responsibility of AWS.","Security of managed services is the responsibility of the customer."], answer: ["Responsibilities vary depending on the services used."] },
+{ q: "You have set up consolidated billing. One account purchased Reserved Instances for 3 years. What is true?", options: ["Reserved Instance discounts can only be shared with the master account.","All accounts can receive the hourly cost benefit of the Reserved Instances.","Reserved Instances provide better performance than On-demand.","There are no cost benefits from consolidated billing."], answer: ["All accounts can receive the hourly cost benefit of the Reserved Instances."] },
+{ q: "A company developed an eCommerce web app in AWS. How to ensure highest availability?", options: ["Deploy across multiple Availability Zones and Edge locations.","Deploy across multiple Availability Zones and subnets.","Deploy across multiple Regions and Availability Zones.","Deploy across multiple VPCs and subnets."], answer: ["Deploy across multiple Regions and Availability Zones."] },
+{ q: "What does AWS Snowball provide? (Choose TWO)", options: ["Built-in computing capabilities to process data locally.","A catalog of third-party software solutions.","Hybrid cloud storage between on-prem and AWS.","Exabyte-scale data transfer service.","Secure transfer of large amounts of data into and out of AWS."], answer: ["Built-in computing capabilities to process data locally.","Secure transfer of large amounts of data into and out of AWS."] },
+{ q: "With AWS Enterprise Support plan, which service helps with billing/account inquiries?", options: ["AWS Health Dashboard.","AWS Support Concierge.","AWS Customer Service.","AWS Operations Support."], answer: ["AWS Support Concierge."] },
+{ q: "A Japanese company hosts in Tokyo Region. US users face latency. What reduces latency?", options: ["Apply Amazon Connect latency routing.","Register new US domain.","Build new on-prem data center in US.","Deploy EC2 instances in a US Region."], answer: ["Deploy EC2 instances in a US Region."] },
+{ q: "How can AWS help organize employees into teams and assign permissions?", options: ["IAM roles.","IAM users.","IAM user groups.","AWS Organizations."], answer: ["IAM user groups."] },
+{ q: "Which service helps migrate Oracle database to AWS?", options: ["AWS OpsWorks.","AWS Database Migration Service.","AWS Server Migration Service.","AWS Application Discovery Service."], answer: ["AWS Database Migration Service."] },
+{ q: "Adjusting compute capacity dynamically to reduce cost is:", options: ["Build security in every layer.","Parallelize tasks.","Implement elasticity.","Adopt monolithic architecture."], answer: ["Implement elasticity."] },
+{ q: "Benefits of hosting infrastructure in AWS? (Choose TWO)", options: ["Increasing speed and agility.","No need to worry about security.","Complete control over physical infrastructure.","Operating applications on behalf of customers.","Physical security and most data/network security handled by AWS."], answer: ["Increasing speed and agility.","Physical security and most data/network security handled by AWS."] },
+{ q: "Advantage of decoupling applications?", options: ["Treat application as single unit.","Reduce interdependencies so failures don't impact other components.","Update monolithic apps easily.","Track API calls."], answer: ["Reduce interdependencies so failures don't impact other components."] },
+{ q: "Which helps view EC2 billing activity for past month?", options: ["AWS Budgets.","AWS Pricing Calculator.","AWS Systems Manager.","AWS Cost & Usage Reports."], answer: ["AWS Cost & Usage Reports."] },
+{ q: "What do you gain from consolidated billing?", options: ["Costs reduced to half.","Organizational purpose only.","Volume discounts across accounts.","Five times free tier."], answer: ["Volume discounts across accounts."] },
+{ q: "How to keep data on EBS safe? (Choose TWO)", options: ["Update firmware.","Create EBS snapshots.","Encrypt EBS data at rest.","Daily backup to external drive.","Prevent unauthorized physical access."], answer: ["Create EBS snapshots.","Encrypt EBS data at rest."] },
+{ q: "Elasticity improves architecture by:", options: ["Scaling on-prem resources automatically.","Scaling AWS resources using ELB.","Reducing interdependencies.","Automatically provisioning required AWS resources based on demand."], answer: ["Automatically provisioning required AWS resources based on demand."] },
+{ q: "Notify company when monthly bill exceeds $2000? (Choose TWO)", options: ["CloudWatch billing alarm with SNS.","SES daily billing alerts.","AWS Budgets alerts.","CloudTrail auto-delete resources.","Amazon Connect alerts."], answer: ["CloudWatch billing alarm with SNS.","AWS Budgets alerts."] },
+{ q: "What does Amazon CloudFront use to distribute content globally?", options: ["AWS Global Accelerator.","AWS Regions.","AWS Edge Locations.","Availability Zones."], answer: ["AWS Edge Locations."] },
+{ q: "What does Principle of Least Privilege mean?", options: ["Grant only required permissions.","All users access core services.","All trusted users access everything.","IAM users should have no permissions."], answer: ["Grant only required permissions."] },
+{ q: "Which does NOT belong to AWS cloud computing models?", options: ["Platform as a Service (PaaS).","Infrastructure as a Service (IaaS).","Software as a Service (SaaS).","Networking as a Service (NaaS)."], answer: ["Networking as a Service (NaaS)."] },
+{ q: "Most cost-effective storage for rarely accessed compliance videos?", options: ["S3 Intelligent-Tiering.","AWS Marketplace.","Amazon S3 Glacier Deep Archive.","Amazon EBS."], answer: ["Amazon S3 Glacier Deep Archive."] },
+{ q: "Which service provides DNS in AWS?", options: ["Route 53.","AWS Config.","Amazon CloudFront.","Amazon EMR."], answer: ["Route 53."] },
+{ q: "Hundreds of thousands of DDoS attacks are recorded every month worldwide. What service does AWS provide to help protect AWS Customers from these attacks? (Choose TWO)", options: ["AWS Shield.","AWS Config.","Amazon Cognito.","AWS WAF.","AWS KMS."], answer: ["AWS Shield.","AWS WAF."] },
+{ q: "A company is deploying a new two-tier web application in AWS. Where should the most frequently accessed data be stored so that the application’s response time is optimal?", options: ["AWS OpsWorks.","AWS Storage Gateway.","Amazon EBS volume.","Amazon ElastiCache."], answer: ["Amazon ElastiCache."] },
+{ q: "You want to run a questionnaire application for only one day (without interruption), which Amazon EC2 purchase option should you use?", options: ["Reserved instances.","Spot instances.","Dedicated instances.","On-demand instances."], answer: ["On-demand instances."] },
+{ q: "You are working on a project that involves creating thumbnails of millions of images. Consistent uptime is not an issue. Which EC2 buying option would be the most cost-effective?", options: ["Reserved Instances.","On-demand Instances.","Dedicated Instances.","Spot Instances."], answer: ["Spot Instances."] },
+{ q: "Which of the following can be described as a global content delivery network (CDN) service?", options: ["AWS VPN.","AWS Direct Connect.","AWS Regions.","Amazon CloudFront."], answer: ["Amazon CloudFront."] },
+{ q: "Which of the following services allows customers to manage their agreements with AWS?", options: ["AWS Artifact.","AWS Certificate Manager.","AWS Systems Manager.","AWS Organizations."], answer: ["AWS Artifact."] },
+{ q: "Which of the following are examples of AWS-Managed Services? (Choose TWO)", options: ["Amazon VPC.","Amazon DynamoDB.","Amazon Elastic MapReduce.","AWS IAM.","Amazon Elastic Compute Cloud."], answer: ["Amazon DynamoDB.","Amazon Elastic MapReduce."] },
+{ q: "Your company requires access to a NoSQL database. Which AWS database offering would meet this requirement?", options: ["Amazon Aurora.","Amazon DynamoDB.","Amazon Elastic Block Store.","Amazon Redshift."], answer: ["Amazon DynamoDB."] },
+{ q: "As part of the Enterprise support plan, who is the primary point of contact for ongoing support needs?", options: ["IAM user.","Infrastructure Event Management (IEM) engineer.","AWS Consulting Partners.","Technical Account Manager (TAM)."], answer: ["Technical Account Manager (TAM)."] },
+{ q: "How can you view the distribution of AWS spending in one of your AWS accounts?", options: ["Using Amazon VPC console.","Contact AWS Support.","Using AWS Cost Explorer.","Contact AWS Finance team."], answer: ["Using AWS Cost Explorer."] },
+{ q: "Which of the following must an IAM user provide to interact with AWS services using the AWS CLI?", options: ["Access keys.","Secret token.","UserID.","User name and password."], answer: ["Access keys."] },
+{ q: "You have AWS Basic support and discovered malicious use of resources. What should you do?", options: ["Contact AWS Customer Service.","Contact AWS Abuse team.","Contact AWS Concierge team.","Contact AWS Security team."], answer: ["Contact AWS Abuse team."] },
+{ q: "Select TWO examples of AWS shared controls.", options: ["Patch Management.","IAM Management.","VPC Management.","Configuration Management.","Data Center operations."], answer: ["Patch Management.","Configuration Management."] },
+{ q: "To avoid a Single Point of Failure, which AWS services would help automate detection and reaction? (Choose TWO)", options: ["ELB.","Auto Scaling.","Amazon Athena.","ECR.","Amazon EC2."], answer: ["ELB.","Auto Scaling."] },
+{ q: "A company will stream video courses globally. Which AWS service helps achieve high transfer speeds?", options: ["Amazon SNS.","Amazon Kinesis Video Streams.","AWS CloudFormation.","Amazon CloudFront."], answer: ["Amazon CloudFront."] },
+{ q: "A two-tier web app uses MySQL. Which AWS service provides automated backups?", options: ["MySQL on EC2.","Amazon Aurora.","Amazon DynamoDB.","Amazon Neptune."], answer: ["Amazon Aurora."] },
+{ q: "Which AWS service enables infrastructure as code?", options: ["AWS CloudFormation.","AWS Config.","Amazon SES.","Amazon EMR."], answer: ["AWS CloudFormation."] },
+{ q: "Under the shared responsibility model, which is AWS's responsibility?", options: ["Client-side encryption.","Configuring infrastructure devices.","Server-side encryption.","Filtering traffic with Security Groups."], answer: ["Configuring infrastructure devices."] },
+{ q: "What does the AWS Health Dashboard provide? (Choose TWO)", options: ["Detailed troubleshooting guidance for AWS events.","Health checks for Auto Scaling instances.","Cost optimization recommendations.","Dashboard detailing vulnerabilities.","Personalized view of AWS service health."], answer: ["Detailed troubleshooting guidance for AWS events.","Personalized view of AWS service health."] },
+{ q: "Which AWS service allows monitoring EC2 performance for troubleshooting?", options: ["AWS Lambda.","AWS Config.","Amazon CloudWatch.","AWS CloudTrail."], answer: ["Amazon CloudWatch."] },
+{ q: "Which AWS service provides infrastructure security optimization recommendations?", options: ["AWS Shield.","AWS Management Console.","AWS Secrets Manager.","AWS Trusted Advisor."], answer: ["AWS Trusted Advisor."] },
+{ q: "Which of the following is not a benefit of Amazon S3? (Choose TWO)", options: ["Unlimited storage for any type of data.","Can run any type of application.","Stores any number of objects with size limits.","Can be manually scaled.","Provides 11 9's durability."], answer: ["Can run any type of application.","Can be manually scaled."] },
+{ q: "Under the Shared Responsibility Model, which are customer responsibilities? (Choose TWO)", options: ["Disk disposal.","Physical access control.","Patching network infrastructure.","Setting password complexity rules.","Configuring network access rules."], answer: ["Setting password complexity rules.","Configuring network access rules."] },
+{ q: "What does AWS provide to deploy technologies like IBM MQ quickly?", options: ["Amazon Aurora.","Amazon CloudWatch.","AWS Quick Start reference deployments.","AWS OpsWorks."], answer: ["AWS Quick Start reference deployments."] },
+{ q: "Which EC2 Reserved Instance type allows exchanging for higher compute power later?", options: ["Elastic RI.","Premium RI.","Standard RI.","Convertible RI."], answer: ["Convertible RI."] },
+{ q: "Where can you store files in AWS? (Choose TWO)", options: ["Amazon EFS.","Amazon SNS.","Amazon EBS.","Amazon ECS.","Amazon EMR."], answer: ["Amazon EFS.","Amazon EBS."] },
+{ q: "Which AWS service can be used to store and reliably deliver messages across distributed systems?", options: ["Amazon Simple Queue Service.","AWS Storage Gateway.","Amazon Simple Email Service.","Amazon Simple Storage Service."], answer: ["Amazon Simple Queue Service."] },
+{ q: "Which payment model allows customers to commit to using EC2 over 1 or 3 years to reduce total costs?", options: ["Pay less as AWS grows.","Pay as you go.","Pay less by using more.","Save when you reserve."], answer: ["Save when you reserve."] },
+{ q: "A company is migrating its on-prem database to Amazon RDS. How can it minimize RDS costs?", options: ["Right-size before and after migration.","Use Multi-Region Active-Passive.","Combine Capacity Reservations with Savings Plans.","Use Multi-Region Active-Active."], answer: ["Right-size before and after migration."] },
+{ q: "What is the primary storage service used by Amazon RDS database instances?", options: ["Amazon Glacier.","Amazon EBS.","Amazon EFS.","Amazon S3."], answer: ["Amazon EBS."] },
+{ q: "Which AWS service should be used to troubleshoot performance and latency issues in microservices?", options: ["AWS CodePipeline.","AWS X-Ray.","Amazon Inspector.","AWS CloudTrail."], answer: ["AWS X-Ray."] },
+{ q: "Which AWS services are designed with native Multi-AZ fault tolerance? (Choose TWO)", options: ["Amazon Redshift.","AWS Snowball.","Amazon Simple Storage Service.","Amazon EBS.","Amazon DynamoDB."], answer: ["Amazon Simple Storage Service.","Amazon DynamoDB."] },
+{ q: "Which Amazon RDS features improve availability? (Choose TWO)", options: ["AWS Regions.","Multi-AZ Deployment.","Automatic patching.","Read Replicas.","Edge Locations."], answer: ["Multi-AZ Deployment.","Read Replicas."] },
+{ q: "Sarah notices 30% traffic from Asia. How can she reduce latency?", options: ["Replicate within same Region AZs.","Migrate hosting provider.","Recreate website content.","Use CloudFront CDN to cache at Edge Locations in Asia."], answer: ["Use CloudFront CDN to cache at Edge Locations in Asia."] },
+{ q: "Which service enables controlling how each developer interacts with AWS products?", options: ["AWS Identity and Access Management.","Amazon RDS.","Network ACLs.","Amazon EMR."], answer: ["AWS Identity and Access Management."] },
+{ q: "Using Amazon EC2 falls under which cloud model?", options: ["IaaS & SaaS.","IaaS.","SaaS.","PaaS."], answer: ["IaaS."] },
+{ q: "Which is a best practice when building applications on AWS?", options: ["Strengthen physical security.","Use trusted hardware vendors.","Use IAM for performance.","Decouple application components."], answer: ["Decouple application components."] },
+{ q: "Which service should store photos and videos?", options: ["Amazon EBS.","Amazon SQS.","Amazon Instance Store.","Amazon S3."], answer: ["Amazon S3."] },
+{ q: "Amazon Glacier is suitable for storing? (Choose TWO)", options: ["Active archives.","Dynamic website assets.","Long-term analytic data.","Active databases.","Cached data."], answer: ["Active archives.","Long-term analytic data."] },
+{ q: "What does Amazon Elastic Beanstalk provide?", options: ["PaaS to automate deployment.","Compute engine for ECS.","Scalable file storage.","NoSQL database service."], answer: ["PaaS to automate deployment."] },
+{ q: "Which service performs automated network assessments of EC2 instances?", options: ["Amazon Kinesis.","Security groups.","Amazon Inspector.","Network ACLs."], answer: ["Amazon Inspector."] },
+{ q: "Under Shared Responsibility Model, which controls are fully inherited from AWS? (Choose TWO)", options: ["Patch management controls.","Database controls.","Awareness & Training.","Environmental controls.","Physical controls."], answer: ["Environmental controls.","Physical controls."] },
+{ q: "Most cost-effective RDS option for at least 3 years?", options: ["Reserved - No Upfront.","Reserved - Partial Upfront.","On-Demand.","Spot Instances."], answer: ["Reserved - Partial Upfront."] },
+{ q: "What AWS characteristic improves global user experience?", options: ["Elasticity.","Global reach.","Data durability.","High availability."], answer: ["Global reach."] },
+{ q: "Savings Plans are available for which services? (Choose TWO)", options: ["AWS Batch.","AWS Outposts.","Amazon Lightsail.","Amazon EC2.","AWS Lambda."], answer: ["Amazon EC2.","AWS Lambda."] },
+{ q: "Best disaster recovery strategy for business-critical workloads?", options: ["Replicate to Edge Locations.","Multi-AZ within same Region.","Backups in another subnet.","Deploy to another Region with Active-Active DR."], answer: ["Deploy to another Region with Active-Active DR."] },
+{ q: "Which statements are correct about AWS service limits? (Choose TWO)", options: ["Contact AWS Support to increase limits.","Each IAM user has same limit.","No service limits.","Use Trusted Advisor to monitor limits.","SES sends limit notifications."], answer: ["Contact AWS Support to increase limits.","Use Trusted Advisor to monitor limits."] },
+{ q: "Which tool enables managing AWS using scripts?", options: ["AWS Console.","AWS Service Catalog.","AWS OpsWorks.","AWS CLI."], answer: ["AWS CLI."] },
+{ q: "Connectivity options for hybrid cloud? (Choose TWO)", options: ["AWS Artifact.","AWS Cloud9.","AWS Direct Connect.","AWS CloudTrail.","AWS VPN."], answer: ["AWS Direct Connect.","AWS VPN."] },
+{ q: "Which should distribute incoming HTTP traffic evenly across EC2 instances?", options: ["EC2 Auto Recovery.","Auto Scaling.","Network Load Balancer.","Application Load Balancer."], answer: ["Application Load Balancer."] },
+{ q: "Which AWS offering is a MySQL-compatible relational database that can scale automatically?", options: ["Amazon Neptune.","Amazon Aurora.","Amazon RDS for SQL Server.","Amazon RDS for PostgreSQL."], answer: ["Amazon Aurora."] },
+{ q: "Which of the following can help protect your EC2 instances from DDoS attacks? (Choose TWO)", options: ["AWS CloudHSM.","Security Groups.","AWS Batch.","AWS IAM.","Network Access Control Lists (Network ACLs)."], answer: ["Security Groups.","Network Access Control Lists (Network ACLs)."] },
+{ q: "What is the AWS data warehouse service that supports high-performance queries on large datasets?", options: ["Amazon Redshift.","Amazon Kinesis.","Amazon DynamoDB.","Amazon RDS."], answer: ["Amazon Redshift."] },
+{ q: "Which should be considered in a TCO analysis comparing AWS to on-premises?", options: ["Application development.","Market research.","Business analysis.","Physical hardware."], answer: ["Physical hardware."] },
+{ q: "How are Linux-based EC2 instances billed?", options: ["Billed per second with a minimum of one minute.","Billed per hour with minimum one day.","Billed per minute with minimum one hour.","Billed per day with minimum one month."], answer: ["Billed per second with a minimum of one minute."] },
+{ q: "Which factors impact the price paid for an EC2 instance? (Choose TWO)", options: ["Instance type.","Availability Zone.","Load balancing.","Number of buckets.","Number of private IPs."], answer: ["Instance type.","Availability Zone."] },
+{ q: "How can a customer duplicate an EC2 instance with identical configuration?", options: ["Create AWS Config template.","Create EBS Snapshot.","Install Aurora on EC2.","Create an AMI and launch from it."], answer: ["Create an AMI and launch from it."] },
+{ q: "Which allows restricting services and actions in individual accounts using AWS Organizations?", options: ["IAM Principals.","Service Control Policies (SCPs).","IAM policies.","AWS Fargate."], answer: ["Service Control Policies (SCPs)."] },
+{ q: "Which statement describes AWS Cloud agility?", options: ["Host apps in multiple regions.","Customizable hardware at lowest cost.","Provision resources in minutes.","Pay upfront to reduce costs."], answer: ["Provision resources in minutes."] },
+{ q: "Benefits of Amazon RDS? (Choose TWO)", options: ["Lower administrative burden.","Complete control over host.","Resizable compute capacity.","Auto-scale to larger/smaller instance types.","Supports document/key-value data."], answer: ["Lower administrative burden.","Resizable compute capacity."] },
+{ q: "Which connectivity option uses IPSec for encrypted on-prem to AWS connection?", options: ["Internet Gateway.","AWS IQ.","AWS Direct Connect.","AWS Site-to-Site VPN."], answer: ["AWS Site-to-Site VPN."] },
+{ q: "Minimum AWS support plan that provides 24x7 phone/chat access to engineers?", options: ["Enterprise Support.","Developer Support.","Basic Support.","Business Support."], answer: ["Business Support."] },
+{ q: "Which control network traffic in AWS? (Choose TWO)", options: ["Network Access Control Lists (NACLs).","Key Pairs.","Access Keys.","IAM Policies.","Security Groups."], answer: ["Network Access Control Lists (NACLs).","Security Groups."] },
+{ q: "Which instance type is most cost-effective for a media transcoding app that can recover from hardware failure?", options: ["Reserved instances.","Spot Instances.","On-Demand instances.","Dedicated instances."], answer: ["Spot Instances."] },
+{ q: "Which AWS service provides the current status of all AWS services in all Regions?", options: ["AWS Service Health Dashboard.","AWS Management Console.","Amazon CloudWatch.","AWS Personal Health Dashboard."], answer: ["AWS Service Health Dashboard."] },
+{ q: "Which feature allows calling AWS services from different programming languages?", options: ["AWS Software Development Kit.","AWS CLI.","AWS CodeDeploy.","AWS Management Console."], answer: ["AWS Software Development Kit."] },
+{ q: "Which AWS service can register a new domain name?", options: ["Amazon Personalize.","Amazon Route 53.","AWS KMS.","AWS Config."], answer: ["Amazon Route 53."] },
+{ q: "Which AWS automation tools help deploy applications faster? (Choose TWO)", options: ["AWS CloudFormation.","AWS Migration Hub.","AWS IAM.","AWS Elastic Beanstalk.","Amazon Macie."], answer: ["AWS CloudFormation.","AWS Elastic Beanstalk."] },
+{ q: "Which AWS service provides cost-optimization recommendations?", options: ["AWS Trusted Advisor.","AWS Pricing Calculator.","Amazon QuickSight.","AWS X-Ray."], answer: ["AWS Trusted Advisor."] },
+{ q: "Which service simplifies connection management among hundreds of VPCs?", options: ["VPC Peering.","AWS Transit Gateway.","Amazon Connect.","Security Groups."], answer: ["AWS Transit Gateway."] },
+{ q: "Benefit and drawback of Reserved EC2 instance? (Select TWO)", options: ["Can be shut down anytime by AWS.","Requires at least one-year commitment.","No additional charge for dedicated.","Provides significant discount vs On-Demand.","Best for periodic workloads."], answer: ["Requires at least one-year commitment.","Provides significant discount vs On-Demand."] },
+{ q: "Why does every AWS Region contain multiple Availability Zones?", options: ["Build resilient and highly available architectures.","Lower total cost.","Allow global reach.","Increase storage capacity."], answer: ["Build resilient and highly available architectures."] },
+{ q: "Most cost-effective option for EC2 instances always available for 2 months?", options: ["On-Demand Instances.","Spot Instances.","Reserved - All Upfront.","Reserved - No Upfront."], answer: ["On-Demand Instances."] },
+{ q: "Benefit of running application in multiple Availability Zones?", options: ["Exceed service limits.","Reduce global latency.","Increase compute capacity.","Increase availability."], answer: ["Increase availability."] },
+{ q: "How does AWS deal with old storage devices at end of life?", options: ["Sell to other providers.","Destroy according to industry standards.","Send for remanufacturing.","Store securely."], answer: ["Destroy according to industry standards."] },
+{ q: "A developer needs to set up an SSL security certificate for a client's eCommerce website to use HTTPS. Which AWS services can deploy SSL certificates? (Choose TWO)", options: ["Amazon Route 53.","AWS ACM.","AWS Directory Service.","AWS Identity & Access Management.","AWS Data Pipeline."], answer: ["Amazon Route 53.","AWS ACM."] },
+{ q: "Which AWS services scale automatically without your intervention? (Choose TWO)", options: ["Amazon EC2.","Amazon S3.","AWS Lambda.","Amazon EMR.","Amazon EBS."], answer: ["Amazon S3.","AWS Lambda."] },
+{ q: "After migrating from EC2 to AWS Lambda, which responsibilities are handled by AWS? (Choose TWO)", options: ["Application management.","Capacity management.","Access control.","Operating system maintenance.","Data management."], answer: ["Capacity management.","Operating system maintenance."] },
+{ q: "How do ELBs improve application reliability?", options: ["Distribute traffic across S3 buckets.","Replicate data across AZs.","Create database Read Replicas.","Ensure only healthy targets receive traffic."], answer: ["Ensure only healthy targets receive traffic."] },
+{ q: "Which EC2 option provides hardware not shared with other customers?", options: ["On-demand instances.","Spot instances.","Dedicated instances.","Reserved instances."], answer: ["Dedicated instances."] },
+{ q: "Best service to transfer 60 Petabytes of data to AWS?", options: ["Snowball.","S3 Transfer Acceleration.","Snowmobile.","Amazon VPC."], answer: ["Snowmobile."] },
+{ q: "Most cost-effective service to store archived data retrievable within 5 hours for 5 years?", options: ["Amazon S3 Glacier.","Amazon EFS.","Amazon S3 Standard.","Amazon EBS."], answer: ["Amazon S3 Glacier."] },
+{ q: "Which AWS service is used to manage user permissions?", options: ["Security Groups.","Amazon ECS.","AWS IAM.","AWS Support."], answer: ["AWS IAM."] },
+{ q: "Which support plan includes AWS Support Concierge Service?", options: ["Premium Support.","Business Support.","Enterprise Support.","Standard Support."], answer: ["Enterprise Support."] },
+{ q: "Which service tracks resource changes using API call history?", options: ["AWS Config.","Amazon CloudWatch.","AWS CloudTrail.","AWS CloudFormation."], answer: ["AWS CloudTrail."] },
+{ q: "Benefits of AWS-managed services? (Choose TWO)", options: ["Complete control over infrastructure.","Deliver new solutions faster.","Lower operational complexity.","Eliminate encryption need.","Developers control patching."], answer: ["Deliver new solutions faster.","Lower operational complexity."] },
+{ q: "Use cases for Amazon S3? (Choose TWO)", options: ["Hosting static websites.","Hosting high CPU websites.","Cost-effective database/log storage.","Media store for CloudFront.","Processing data streams."], answer: ["Hosting static websites.","Media store for CloudFront."] },
+{ q: "AWS recommendation regarding access keys?", options: ["Delete all keys.","Share only with trusted people.","Rotate them regularly.","Save inside application code."], answer: ["Rotate them regularly."] },
+{ q: "IAM feature that adds extra security layer beyond username/password?", options: ["Key Pair.","Access Keys.","SDK.","MFA."], answer: ["MFA."] },
+{ q: "Benefit of using API to access AWS services?", options: ["Improve performance.","Reduce provisioning time.","Reduce developers needed.","Programmatic management of resources."], answer: ["Programmatic management of resources."] },
+{ q: "Best storage for database with high read/write activity?", options: ["AWS Storage Gateway.","Amazon S3.","Amazon EBS.","Amazon Glacier."], answer: ["Amazon EBS."] },
+{ q: "How to track and avoid overspending on underutilized RIs?", options: ["Use AWS Organizations.","Use Amazon Neptune.","Use AWS Budgets alerts.","Use CloudTrail."], answer: ["Use AWS Budgets alerts."] },
+{ q: "Which service provides 5x performance of standard MySQL?", options: ["Amazon Aurora.","Amazon Redshift.","Amazon DynamoDB.","Amazon Neptune."], answer: ["Amazon Aurora."] },
+{ q: "What does AWS Service Catalog provide?", options: ["Find service descriptions.","Explore catalogs.","Organize and govern IT services.","Deploy infra with programming languages."], answer: ["Organize and govern IT services."] },
+{ q: "For DynamoDB, what is AWS responsible for? (Choose TWO)", options: ["Protecting credentials.","Logging access activity.","Patching database software.","Operating system maintenance.","Creating access policies."], answer: ["Patching database software.","Operating system maintenance."] },
+{ q: "Which service helps with planning application migration?", options: ["AWS Snowball Migration Service.","AWS Application Discovery Service.","AWS DMS.","AWS Migration Hub."], answer: ["AWS Application Discovery Service."] },
+{ q: "Most granular AWS cost data?", options: ["Amazon Machine Image.","AWS Cost Explorer.","AWS Cost & Usage Report.","Amazon CloudWatch."], answer: ["AWS Cost & Usage Report."] },
+{ q: "What best describes an AWS Region?", options: ["Geographical location with Edge locations.","Virtual network for one customer.","Geographical location with multiple Availability Zones.","Country where AWS exists."], answer: ["Geographical location with multiple Availability Zones."] },
+{ q: "Which logs help determine who deleted S3 buckets?", options: ["SNS logs.","SQS logs.","CloudWatch Logs.","CloudTrail logs."], answer: ["CloudTrail logs."] },
+{ q: "Factors for choosing database technology? (Choose TWO)", options: ["Availability Zones.","Data sovereignty.","Reads/writes per second.","Nature of queries.","Software bugs."], answer: ["Reads/writes per second.","Nature of queries."] },
+{ q: "Benefits of implementing a tagging strategy? (Choose TWO)", options: ["Quickly identify resources for a specific project.","Quickly identify software solutions on AWS.","Track API calls.","Identify deleted resources.","Track AWS spending across resources."], answer: ["Quickly identify resources for a specific project.","Track AWS spending across resources."] },
+{ q: "What are AWS shared controls?", options: ["Controls solely responsibility of customer.","Controls inherited from AWS.","Controls applied to infrastructure and customer layers.","Controls AWS and customer collaborate on."], answer: ["Controls AWS and customer collaborate on."] },
+{ q: "Design principles related to performance efficiency? (Choose TWO)", options: ["Build multi-region architectures.","Apply security at all layers.","Implement strong IAM controls.","Use serverless architectures.","Enable audit logging."], answer: ["Build multi-region architectures.","Use serverless architectures."] },
+{ q: "Customer responsibilities when using Amazon EC2? (Choose TWO)", options: ["Protecting sensitive data.","Patching underlying infrastructure.","Setup of managed databases.","Maintaining hardware.","Installing and configuring third-party software."], answer: ["Protecting sensitive data.","Installing and configuring third-party software."] },
+{ q: "Why choose AWS over on-premises? (Choose TWO)", options: ["Free software licenses.","Free technical support.","Elastic resources.","On-site auditing visits.","Cost savings."], answer: ["Elastic resources.","Cost savings."] },
+{ q: "Which services help with security analysis and compliance auditing? (Choose TWO)", options: ["Amazon Inspector.","Virtual Private Gateway.","AWS Batch.","Amazon ECS.","AWS Config."], answer: ["Amazon Inspector.","AWS Config."] },
+{ q: "Which is NOT a characteristic of Amazon EC2?", options: ["Serverless web service.","No upfront hardware investment.","Launch as many/few servers as needed.","Offers scalable computing."], answer: ["Serverless web service."] },
+{ q: "Which compute service executes code only when triggered by events?", options: ["AWS Lambda.","Amazon CloudWatch.","AWS Transit Gateway.","Amazon EC2."], answer: ["AWS Lambda."] },
+{ q: "What are virtual servers called in AWS?", options: ["Amazon EBS Snapshots.","Amazon VPC.","AWS Managed Servers.","Amazon EC2 Instances."], answer: ["Amazon EC2 Instances."] },
+{ q: "Framework that helps design roadmap to successful cloud adoption?", options: ["AWS Secrets Manager.","AWS WAF.","AWS CAF.","Amazon EFS."], answer: ["AWS CAF."] },
+{ q: "Tool to perform cost-benefit analysis of moving to AWS?", options: ["AWS Cost Explorer.","AWS TCO Calculator.","AWS Budgets.","AWS Pricing Calculator."], answer: ["AWS TCO Calculator."] },
+{ q: "Which supports Operational Excellence pillar?", options: ["Use Trusted Advisor.","Use CloudTrail logging.","Use CloudFormation for IaC.","Deploy multi-AZ."], answer: ["Use CloudFormation for IaC."] },
+{ q: "Why startups prefer AWS? (Choose TWO)", options: ["Pay later when business succeeds.","AWS builds data centers fastest.","Reduce time-to-market.","Remove operational expenditure.","Replace CapEx with variable costs."], answer: ["Reduce time-to-market.","Replace CapEx with variable costs."] },
+{ q: "Benefits of DynamoDB? (Choose TWO)", options: ["Auto scales throughput.","Resizable instances.","Supports relational & non-relational.","Single-digit millisecond latency.","Supports CouchDB & MongoDB engines."], answer: ["Auto scales throughput.","Single-digit millisecond latency."] },
+{ q: "Protect data at rest on S3? (Choose TWO)", options: ["Versioning.","Deduplication.","Permissions.","Decryption.","Conversion."], answer: ["Versioning.","Permissions."] },
+{ q: "MAP provides what to accelerate enterprise adoption? (Choose TWO)", options: ["AWS Partners.","AWS Artifact.","AWS Professional Services.","Amazon Athena.","Amazon PinPoint."], answer: ["AWS Partners.","AWS Professional Services."] },
+{ q: "Which is NOT recommended to avoid unexpected charges?", options: ["Delete unused EBS volumes.","Delete unused AutoScaling launch config.","Delete unused ELBs.","Release unused Elastic IPs."], answer: ["Delete unused AutoScaling launch config."] },
+{ q: "Tool to visualize AWS spending over past months?", options: ["AWS Cost Explorer.","AWS Pricing Calculator.","AWS Budgets.","AWS Consolidated Billing."], answer: ["AWS Cost Explorer."] },
+{ q: "Customer is NOT responsible for? (Select TWO)", options: ["Running penetration tests.","Reserving capacity.","Data center operations.","Auditing & compliance.","Infrastructure security."], answer: ["Data center operations.","Infrastructure security."] },
+{ q: "Service to send promotional SMS worldwide?", options: ["Amazon SES.","Amazon S3.","Amazon SNS.","Amazon SQS."], answer: ["Amazon SNS."] },
+{ q: "Which allow creating new RDS instances? (Choose TWO)", options: ["AWS CodeDeploy.","AWS Quick Starts.","AWS CloudFormation.","AWS DMS.","AWS Management Console."], answer: ["AWS CloudFormation.","AWS Management Console."] },
+{ q: "What reduces EC2 instance cost?", options: ["Low monthly maintenance.","Low-cost tagging.","Per-second billing.","Low startup fees."], answer: ["Per-second billing."] },
+{ q: "Which group assists customers in achieving business outcomes?", options: ["AWS Security Team.","AWS Professional Services.","AWS Trusted Advisor.","AWS Concierge Support."], answer: ["AWS Professional Services."] },
+{ q: "Service to manage encryption keys?", options: ["AWS KMS.","AWS SCPs.","MFA.","Amazon Macie."], answer: ["AWS KMS."] },
+{ q: "Service to download AWS SOC & PCI reports?", options: ["Well-Architected Tool.","AWS Artifact.","AWS Glue.","Amazon Chime."], answer: ["AWS Artifact."] },
+{ q: "A company is using EC2 Instances to run their e-commerce site on AWS. If the site becomes unavailable, the company will lose significant money for each minute of downtime. Which design principle should be used to minimize outage risk?", options: ["Least Privilege.","Pilot Light.","Fault Tolerance.","Multi-threading."], answer: ["Fault Tolerance."] },
+{ q: "You decide to buy a reserved instance for one year. Which option provides the largest total discount?", options: ["All up-front reservation.","All reserved instance payment options provide the same discount level.","Partial up-front reservation.","No up-front reservation."], answer: ["All up-front reservation."] },
+{ q: "What features does AWS offer to help protect your data in the Cloud? (Choose TWO)", options: ["Access control.","Physical MFA devices.","Data encryption.","Unlimited storage.","Load balancing."], answer: ["Access control.","Data encryption."] },
+{ q: "An Amazon Linux instance ran 2h 5m 9s and a CentOS instance ran 4h 23m 7s. How much time is billed?", options: ["3 hours for Linux and 5 hours for CentOS.","2h 5m 9s for Linux and 4h 23m 7s for CentOS.","2h 5m 9s for Linux and 5 hours for CentOS.","3 hours for Linux and 4h 23m 7s for CentOS."], answer: ["2h 5m 9s for Linux and 5 hours for CentOS."] },
+{ q: "Which AWS Support feature allows customers to manage support cases programmatically?", options: ["AWS Trusted Advisor.","AWS Operations Support.","AWS Support API.","AWS Personal Health Dashboard."], answer: ["AWS Support API."] },
+{ q: "Which methods can be used to interact with IAM? (Choose TWO)", options: ["AWS CLI.","AWS Security Groups.","AWS SDKs.","AWS Network ACLs.","AWS CodeCommit."], answer: ["AWS CLI.","AWS SDKs."] },
+{ q: "Which are types of IAM identities? (Choose TWO)", options: ["AWS Resource Groups.","IAM Policies.","IAM Roles.","IAM Users.","AWS Organizations."], answer: ["IAM Roles.","IAM Users."] },
+{ q: "Which Amazon RDS feature facilitates offloading database read activity?", options: ["Database Snapshots.","Multi-AZ Deployments.","Automated Backups.","Read Replicas."], answer: ["Read Replicas."] },
+{ q: "How does AWS notify customers about security and privacy events?", options: ["Using AWS ACM.","Using Security Bulletins.","Using AWS Management Console.","Using Compliance Resources."], answer: ["Using Security Bulletins."] },
+{ q: "Which IAM entity is best used to grant temporary access to AWS resources?", options: ["IAM Users.","Key Pair.","IAM Roles.","IAM Groups."], answer: ["IAM Roles."] },
+{ q: "Which service should distribute traffic evenly across three EC2 instances?", options: ["AWS Global Accelerator.","AWS Application Load Balancer (ALB).","Amazon CloudFront.","Transit VPC."], answer: ["AWS Application Load Balancer (ALB)."] },
+{ q: "Which approach eliminates human error and automates AWS environment creation?", options: ["Use software test automation tools.","Use AWS CodeDeploy.","Use code to provision infrastructure.","Migrate to dedicated host."], answer: ["Use code to provision infrastructure."] },
+{ q: "How can a company better secure its AWS account from unauthorized access?", options: ["Restrict API calls.","Share IAM accounts by department.","Require MFA for all IAM users.","Set up two passwords."], answer: ["Require MFA for all IAM users."] },
+{ q: "Which AWS Service offers volume discounts based on usage?", options: ["Amazon VPC.","Amazon S3.","Amazon Lightsail.","AWS Cost Explorer."], answer: ["Amazon S3."] },
+{ q: "Which factors should be considered when choosing a Region? (Choose TWO)", options: ["Region’s security level.","Data sovereignty.","Cost.","Number of VPCs.","Geographic proximity."], answer: ["Data sovereignty.","Cost."] },
+{ q: "Which service improves performance by retrieving information from in-memory caches?", options: ["Amazon EFS.","Amazon Neptune.","Amazon ElastiCache.","DAX."], answer: ["Amazon ElastiCache."] },
+{ q: "What is an advantage of Auto Scaling Groups?", options: ["Caches responses globally.","Scales across AZs for availability.","Scales across regions automatically.","Distributes traffic across AZs."], answer: ["Scales across AZs for availability."] },
+{ q: "Why has the TCO gap widened between AWS and traditional infrastructure?", options: ["More capital expenditures.","AWS automates everything.","AWS lowers cloud costs.","Free security."], answer: ["AWS lowers cloud costs."] },
+{ q: "Examples of customer responsibility for security IN the cloud? (Choose TWO)", options: ["Building application schema.","Replacing hardware.","Creating hypervisor.","Patch management of infrastructure.","File system encryption."], answer: ["Building application schema.","File system encryption."] },
+{ q: "Which is a type of MFA device customers can use?", options: ["AWS CloudHSM.","U2F Security Key.","AWS Access Keys.","AWS Key Pair."], answer: ["U2F Security Key."] },
+{ q: "Which service should deploy an existing .NET application quickly?", options: ["Amazon SNS.","AWS Elastic Beanstalk.","AWS Systems Manager.","AWS Trusted Advisor."], answer: ["AWS Elastic Beanstalk."] },
+{ q: "Which are NOT factors when estimating EC2 costs? (Choose TWO)", options: ["Time running.","Number of security groups.","Elastic IPs.","Hosted Zones.","Number of instances."], answer: ["Number of security groups.","Hosted Zones."] },
+{ q: "Which service extends on-prem storage to AWS cost-effectively?", options: ["AWS Data Pipeline.","AWS Storage Gateway.","Amazon Aurora.","Amazon EFS."], answer: ["AWS Storage Gateway."] },
+{ q: "Which storage service scales automatically while minimizing cost?", options: ["Amazon S3.","Amazon EBS.","Amazon ECS.","AWS Storage Gateway."], answer: ["Amazon S3."] },
+{ q: "Why couldn’t a new IAM user create EBS snapshots or S3 buckets?", options: ["Only root can access EBS/S3.","Must contact AWS Support.","Not enough S3 space.","Non-explicit deny to new users."], answer: ["Non-explicit deny to new users."] },
+{ q: "Which of the following is true regarding AWS Availability Zones and Edge Locations?", options: ["Edge locations are located in separate Availability Zones worldwide.","An availability zone exists within an edge location.","An Availability Zone is a geographic location with multiple edge locations.","An AWS Availability Zone is an isolated location within a Region, while edge locations are in multiple cities worldwide."], answer: ["An AWS Availability Zone is an isolated location within a Region, while edge locations are in multiple cities worldwide."] },
+{ q: "Which features are included in the AWS Business Support Plan? (Choose TWO)", options: ["24x7 access to customer service.","Email-only access during business hours.","Access to Infrastructure Event Management (IEM) for additional fee.","24x7 access to TAM.","Partial Trusted Advisor checks."], answer: ["24x7 access to customer service.","Access to Infrastructure Event Management (IEM) for additional fee."] },
+{ q: "Which AWS Service allows users to authenticate using Amazon, Apple, Facebook, or Google identities?", options: ["Amazon GuardDuty.","Amazon Personalize.","Amazon Cognito.","AWS IAM."], answer: ["Amazon Cognito."] },
+{ q: "Which AWS Service allows customers to define infrastructure as code templates reusable across projects?", options: ["AWS CloudFormation.","AWS Config.","AWS CloudTrail.","AWS Auto Scaling."], answer: ["AWS CloudFormation."] },
+{ q: "Advantages of using AWS as cloud provider? (Choose TWO)", options: ["Eliminates server monitoring.","Manages all compliance tasks.","Provides custom hardware specs.","Eliminates need to guess capacity.","Enables trading CapEx for OpEx."], answer: ["Eliminates need to guess capacity.","Enables trading CapEx for OpEx."] },
+{ q: "Which AWS Services can run Microsoft SQL Server on AWS? (Choose TWO)", options: ["AWS Fargate.","Amazon EC2.","Amazon RDS.","AWS DMS.","AWS Lambda."], answer: ["Amazon EC2.","Amazon RDS."] },
+{ q: "Which AWS Service performs health checks on EC2 instances?", options: ["AWS CloudFormation.","Amazon Route 53.","Amazon Chime.","Amazon Aurora."], answer: ["Amazon Route 53."] },
+{ q: "Which AWS Service provides facial recognition?", options: ["Amazon Comprehend.","AWS IAM.","Amazon Polly.","Amazon Rekognition."], answer: ["Amazon Rekognition."] },
+{ q: "Which are AWS-managed databases? (Choose TWO)", options: ["Amazon Neptune.","Amazon CloudSearch.","SQL Server on EC2.","MySQL on EC2.","Amazon RDS for MySQL."], answer: ["Amazon Neptune.","Amazon RDS for MySQL."] },
+{ q: "Best EC2 instance class for cost-minimized large-scale processing where time is not critical?", options: ["On-Demand.","Reserved - No Upfront.","Spot Instances.","Reserved - All Upfront."], answer: ["Spot Instances."] },
+{ q: "Who can grant full administrative access in an AWS account?", options: ["AWS account owner.","AWS TAM.","AWS security team.","AWS support engineers."], answer: ["AWS account owner."] },
+{ q: "Which service is most appropriate for migrating large number of on-prem workloads?", options: ["AWS File Transfer Acceleration.","AWS Server Migration Service.","AWS Database Migration Service.","AWS Application Discovery Service."], answer: ["AWS Server Migration Service."] },
+{ q: "Key benefits of AWS CloudFormation? (Choose TWO)", options: ["Deploy without infrastructure knowledge.","Applies IAM security automatically.","Automates provisioning and updates safely.","Model infrastructure as text file.","Builds application code."], answer: ["Automates provisioning and updates safely.","Model infrastructure as text file."] },
+{ q: "Which deployment model connects cloud and on-prem infrastructure?", options: ["On-premises.","Mixed.","Hybrid.","Cloud."], answer: ["Hybrid."] },
+{ q: "Which service can create a standby environment in another Region available in minutes?", options: ["CloudEndure Disaster Recovery.","CloudEndure Migration.","AWS Backup.","AWS Glue."], answer: ["CloudEndure Disaster Recovery."] },
+{ q: "Most appropriate S3 class for stable-access static assets?", options: ["S3 Standard-IA.","S3 Intelligent-Tiering.","S3 Glacier Deep Archive.","S3 Standard."], answer: ["S3 Standard."] },
+{ q: "Where should you create backup for another geographical location?", options: ["Another Edge location.","Another Region.","Another VPC.","Another AZ."], answer: ["Another Region."] },
+{ q: "True regarding EC2 security?", options: ["Use instance store for login data.","Regularly patch OS and apps.","Deploy only in trusted AZ.","Track API calls using Athena."], answer: ["Regularly patch OS and apps."] },
+{ q: "What does AWS Cost Explorer provide?", options: ["Compare AWS vs on-prem costs.","Accurate service estimates.","Consolidated billing.","Cost forecasts up to 12 months."], answer: ["Cost forecasts up to 12 months."] },
+{ q: "Which RDS feature performs automatic failover?", options: ["RDS Single-AZ.","RDS Write Replica.","RDS Snapshots.","RDS Multi-AZ."], answer: ["RDS Multi-AZ."] },
+{ q: "Best way to reduce charges for unused On-Demand EC2 instances?", options: ["Delete EBS volumes.","Cannot minimize charges.","Terminate instances.","Stop instances."], answer: ["Stop instances."] },
+{ q: "How to protect AWS root account?", options: ["Delete root access keys if not needed.","Use root for daily work with MFA.","Access root from personal phone only.","Share root credentials with trusted persons."], answer: ["Delete root access keys if not needed."] },
+{ q: "Factors considered for Amazon EBS pricing? (Choose TWO)", options: ["Volume size provisioned.","Compute capacity consumed.","Snapshot storage.","Compute time consumed.","Snowball devices."], answer: ["Volume size provisioned.","Snapshot storage."] },
+{ q: "AWS recommendation when granting IAM permissions?", options: ["Separate policy per account.","Apply Principle of Least Privilege.","Grant no permissions.","Create different passwords."], answer: ["Apply Principle of Least Privilege."] },
+{ q: "Which has greatest impact on cost? (Choose TWO)", options: ["Compute charges.","Number of services.","Data Transfer In.","Data Transfer Out.","Number of IAM roles."], answer: ["Compute charges.","Data Transfer Out."] },
+{ q: "Who will get the largest discount when purchasing EC2 instances?", options: ["On-demand, Convertible, Partial upfront.","Reserved, Convertible, All upfront.","Reserved, Standard, No upfront.","Reserved, Standard, All upfront."], answer: ["Reserved, Standard, All upfront."] },
+{ q: "Which of the following is an available option when purchasing Amazon EC2 instances?", options: ["Bid to get lowest prices.","Register EC2 for volume discounts.","Buy Dedicated Instances up to 90% discount.","Pay upfront to get lower hourly costs."], answer: ["Pay upfront to get lower hourly costs."] },
+{ q: "What does the term 'Economies of scale' mean?", options: ["You save more when you consume more.","You pay more over time.","AWS continuously lowers costs as it grows.","Pay as you go model."], answer: ["AWS continuously lowers costs as it grows."] },
+{ q: "Which service helps dynamically match compute capacity during traffic spikes?", options: ["AWS Auto Scaling.","Amazon EC2.","Amazon EFS.","Amazon ElastiCache."], answer: ["AWS Auto Scaling."] },
+{ q: "Which statement is true of Amazon VPC?", options: ["Controls user interactions with all AWS resources.","Customers have complete control over VPC networking.","AWS manages all VPC configuration.","Helps review AWS architecture best practices."], answer: ["Customers have complete control over VPC networking."] },
+{ q: "Which tool can a non-AWS customer use to compare on-prem costs to AWS?", options: ["AWS Cost Explorer.","AWS Pricing Calculator.","AWS Budgets.","AWS TCO Calculator."], answer: ["AWS TCO Calculator."] },
+{ q: "Which services provide real-time auditing for compliance and vulnerabilities? (Choose TWO)", options: ["AWS Config.","Amazon Redshift.","Amazon MQ.","AWS Trusted Advisor.","Amazon Cognito."], answer: ["AWS Config.","AWS Trusted Advisor."] },
+{ q: "Which AWS service uses Puppet to automate EC2 configuration?", options: ["AWS OpsWorks.","AWS CloudFormation.","AWS Quick Starts.","AWS CloudTrail."], answer: ["AWS OpsWorks."] },
+{ q: "Which service enables hybrid deployment to AWS and on-prem servers?", options: ["Amazon Kinesis.","Amazon QuickSight.","AWS CodeDeploy.","Amazon Athena."], answer: ["AWS CodeDeploy."] },
+{ q: "Select the services that are server-based: (Choose TWO)", options: ["Amazon RDS.","Amazon DynamoDB.","AWS Lambda.","AWS Fargate.","Amazon EMR."], answer: ["Amazon RDS.","Amazon EMR."] },
+{ q: "What best describes penetration testing?", options: ["Testing response time.","Testing network for vulnerabilities.","Checking unhealthy instances.","Testing software for bugs."], answer: ["Testing network for vulnerabilities."] },
+{ q: "Use cases for Amazon EMR? (Choose TWO)", options: ["Backup large data cheaply.","Move exabyte data.","Analyze large datasets.","Run Spark and Hadoop frameworks.","Run Docker containers."], answer: ["Analyze large datasets.","Run Spark and Hadoop frameworks."] },
+{ q: "You cannot see chat option in AWS Support Center. What should you do?", options: ["No chat feature exists.","Request chat for fee.","Upgrade to Business Support plan.","Upgrade to Developer Support."], answer: ["Upgrade to Business Support plan."] },
+{ q: "Which service helps developers deploy apps quickly without cloud expertise?", options: ["AWS Fargate.","AWS Batch.","Amazon Personalize.","AWS Elastic Beanstalk."], answer: ["AWS Elastic Beanstalk."] },
+{ q: "What best describes AWS Pay-As-You-Go pricing?", options: ["Low upfront, large variable payments.","Low upfront, fixed payments.","Large upfront, low fixed payments.","Large capital expenses replaced with low variable payments."], answer: ["Large capital expenses replaced with low variable payments."] },
+{ q: "For Amazon RDS databases, what does AWS perform? (Choose TWO)", options: ["Database setup.","Network traffic protection.","Operating system management.","Access management.","Firewall rule management."], answer: ["Database setup.","Operating system management."] },
+{ q: "Which strategy helps analyze AWS costs?", options: ["Using tags to group resources.","Using CloudFormation.","Deploying across regions.","Using Inspector for cost reports."], answer: ["Using tags to group resources."] },
+{ q: "Which service provides consistent private connection for large daily data transfers?", options: ["AWS Direct Connect.","Amazon Comprehend.","AWS Snowmobile.","AWS VPN."], answer: ["AWS Direct Connect."] },
+{ q: "Main benefit of AWS Storage Gateway?", options: ["Automates ETL jobs.","Provides migration devices.","Integrates on-prem with cloud storage.","Provides hardware key storage."], answer: ["Integrates on-prem with cloud storage."] },
+{ q: "Most cost-effective storage with immediate retrieval for backups?", options: ["S3 Glacier Deep Archive.","S3 Standard-IA.","S3 Glacier.","Instance Store."], answer: ["S3 Standard-IA."] },
+{ q: "Which service routes traffic to best-performing global endpoint?", options: ["AWS Global Accelerator.","AWS Data Pipeline.","AWS DAX Accelerator.","AWS Transfer Acceleration."], answer: ["AWS Global Accelerator."] },
+{ q: "Why are Serverless Architectures more economical?", options: ["Uses powerful devices.","Compute runs only when executed.","Large reserved discounts.","Auto scaling only."], answer: ["Compute runs only when executed."] },
+{ q: "Use cases of Amazon Route 53? (Choose TWO)", options: ["Point-to-point connectivity.","Detect config changes.","DNS configuration and management.","Global traffic routing.","Infrastructure security recommendations."], answer: ["DNS configuration and management.","Global traffic routing."] },
+{ q: "Cost-effective way to transfer 200TB to AWS?", options: ["AWS Snowmobile.","AWS Import/Export.","AWS DMS.","AWS Snowball."], answer: ["AWS Snowball."] },
+{ q: "Best service for sub-millisecond latency in real-time IoT app?", options: ["Amazon Redshift.","Amazon Athena.","AWS Cloud9.","Amazon ElastiCache for Redis."], answer: ["Amazon ElastiCache for Redis."] },
+{ q: "Who will get the largest discount when purchasing EC2 instances?", options: ["On-demand, Convertible, Partial upfront.","Reserved, Convertible, All upfront.","Reserved, Standard, No upfront.","Reserved, Standard, All upfront."], answer: ["Reserved, Standard, All upfront."] },
+{ q: "Which of the following is an available option when purchasing Amazon EC2 instances?", options: ["Bid to get lowest prices.","Register EC2 for volume discounts.","Buy Dedicated Instances up to 90% discount.","Pay upfront to get lower hourly costs."], answer: ["Pay upfront to get lower hourly costs."] },
+{ q: "What does the term 'Economies of scale' mean?", options: ["You save more when you consume more.","You pay more over time.","AWS continuously lowers costs as it grows.","Pay as you go model."], answer: ["AWS continuously lowers costs as it grows."] },
+{ q: "Which service helps dynamically match compute capacity during traffic spikes?", options: ["AWS Auto Scaling.","Amazon EC2.","Amazon EFS.","Amazon ElastiCache."], answer: ["AWS Auto Scaling."] },
+{ q: "Which statement is true of Amazon VPC?", options: ["Controls user interactions with all AWS resources.","Customers have complete control over VPC networking.","AWS manages all VPC configuration.","Helps review AWS architecture best practices."], answer: ["Customers have complete control over VPC networking."] },
+{ q: "Which tool can a non-AWS customer use to compare on-prem costs to AWS?", options: ["AWS Cost Explorer.","AWS Pricing Calculator.","AWS Budgets.","AWS TCO Calculator."], answer: ["AWS TCO Calculator."] },
+{ q: "Which services provide real-time auditing for compliance and vulnerabilities? (Choose TWO)", options: ["AWS Config.","Amazon Redshift.","Amazon MQ.","AWS Trusted Advisor.","Amazon Cognito."], answer: ["AWS Config.","AWS Trusted Advisor."] },
+{ q: "Which AWS service uses Puppet to automate EC2 configuration?", options: ["AWS OpsWorks.","AWS CloudFormation.","AWS Quick Starts.","AWS CloudTrail."], answer: ["AWS OpsWorks."] },
+{ q: "Which service enables hybrid deployment to AWS and on-prem servers?", options: ["Amazon Kinesis.","Amazon QuickSight.","AWS CodeDeploy.","Amazon Athena."], answer: ["AWS CodeDeploy."] },
+{ q: "Select the services that are server-based: (Choose TWO)", options: ["Amazon RDS.","Amazon DynamoDB.","AWS Lambda.","AWS Fargate.","Amazon EMR."], answer: ["Amazon RDS.","Amazon EMR."] },
+{ q: "What best describes penetration testing?", options: ["Testing response time.","Testing network for vulnerabilities.","Checking unhealthy instances.","Testing software for bugs."], answer: ["Testing network for vulnerabilities."] },
+{ q: "Use cases for Amazon EMR? (Choose TWO)", options: ["Backup large data cheaply.","Move exabyte data.","Analyze large datasets.","Run Spark and Hadoop frameworks.","Run Docker containers."], answer: ["Analyze large datasets.","Run Spark and Hadoop frameworks."] },
+{ q: "You cannot see chat option in AWS Support Center. What should you do?", options: ["No chat feature exists.","Request chat for fee.","Upgrade to Business Support plan.","Upgrade to Developer Support."], answer: ["Upgrade to Business Support plan."] },
+{ q: "Which service helps developers deploy apps quickly without cloud expertise?", options: ["AWS Fargate.","AWS Batch.","Amazon Personalize.","AWS Elastic Beanstalk."], answer: ["AWS Elastic Beanstalk."] },
+{ q: "What best describes AWS Pay-As-You-Go pricing?", options: ["Low upfront, large variable payments.","Low upfront, fixed payments.","Large upfront, low fixed payments.","Large capital expenses replaced with low variable payments."], answer: ["Large capital expenses replaced with low variable payments."] },
+{ q: "For Amazon RDS databases, what does AWS perform? (Choose TWO)", options: ["Database setup.","Network traffic protection.","Operating system management.","Access management.","Firewall rule management."], answer: ["Database setup.","Operating system management."] },
+{ q: "Which strategy helps analyze AWS costs?", options: ["Using tags to group resources.","Using CloudFormation.","Deploying across regions.","Using Inspector for cost reports."], answer: ["Using tags to group resources."] },
+{ q: "Which service provides consistent private connection for large daily data transfers?", options: ["AWS Direct Connect.","Amazon Comprehend.","AWS Snowmobile.","AWS VPN."], answer: ["AWS Direct Connect."] },
+{ q: "Main benefit of AWS Storage Gateway?", options: ["Automates ETL jobs.","Provides migration devices.","Integrates on-prem with cloud storage.","Provides hardware key storage."], answer: ["Integrates on-prem with cloud storage."] },
+{ q: "Most cost-effective storage with immediate retrieval for backups?", options: ["S3 Glacier Deep Archive.","S3 Standard-IA.","S3 Glacier.","Instance Store."], answer: ["S3 Standard-IA."] },
+{ q: "Which service routes traffic to best-performing global endpoint?", options: ["AWS Global Accelerator.","AWS Data Pipeline.","AWS DAX Accelerator.","AWS Transfer Acceleration."], answer: ["AWS Global Accelerator."] },
+{ q: "Why are Serverless Architectures more economical?", options: ["Uses powerful devices.","Compute runs only when executed.","Large reserved discounts.","Auto scaling only."], answer: ["Compute runs only when executed."] },
+{ q: "Use cases of Amazon Route 53? (Choose TWO)", options: ["Point-to-point connectivity.","Detect config changes.","DNS configuration and management.","Global traffic routing.","Infrastructure security recommendations."], answer: ["DNS configuration and management.","Global traffic routing."] },
+{ q: "Cost-effective way to transfer 200TB to AWS?", options: ["AWS Snowmobile.","AWS Import/Export.","AWS DMS.","AWS Snowball."], answer: ["AWS Snowball."] },
+{ q: "Best service for sub-millisecond latency in real-time IoT app?", options: ["Amazon Redshift.","Amazon Athena.","AWS Cloud9.","Amazon ElastiCache for Redis."], answer: ["Amazon ElastiCache for Redis."] },
+
+];
+
+/* ═══════════════════════════════════════════════════════════════════
+   PERSONALISED MESSAGE HELPER
+   Call setPersonalMessage("Your message here") to customise the result
+   page message dynamically (e.g. from a backend).
+═══════════════════════════════════════════════════════════════════ */
+function setPersonalMessage(msg) {
+  document.getElementById('personal-msg-text').textContent = msg;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   QUIZ STATE
+═══════════════════════════════════════════════════════════════════ */
+let state = {
+  questions:    [],   // shuffled subset
+  answers:      [],   // user's selected answers (index into shuffledOptions)
+  shuffledOpts: [],   // per-question shuffled option arrays
+  current:      0,
+  totalTime:    0,
+  timeLeft:     0,
+  timerID:      null,
+};
+
+/* ─── Utility: shuffle array (Fisher-Yates) ─── */
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* ─── DOM refs ─── */
+const screens       = { start: document.getElementById('screen-start'), quiz: document.getElementById('screen-quiz'), result: document.getElementById('screen-result') };
+const inputTime     = document.getElementById('input-time');
+const inputCount    = document.getElementById('input-count');
+const errTime       = document.getElementById('err-time');
+const errCount      = document.getElementById('err-count');
+const btnStart      = document.getElementById('btn-start');
+const progText      = document.getElementById('prog-text');
+const progPct       = document.getElementById('prog-pct');
+const progFill      = document.getElementById('prog-fill');
+const timerDisplay  = document.getElementById('timer-display');
+const qNumber       = document.getElementById('q-number');
+const qText         = document.getElementById('q-text');
+const qOptions      = document.getElementById('q-options');
+const btnPrev       = document.getElementById('btn-prev');
+const btnNext       = document.getElementById('btn-next');
+const btnSubmit     = document.getElementById('btn-submit');
+const btnRetry      = document.getElementById('btn-retry');
+
+document.getElementById('bank-count').textContent = QUESTION_BANK.length;
+
+/* ─── Show screen ─── */
+function showScreen(name) {
+  Object.values(screens).forEach(s => s.classList.remove('active'));
+  screens[name].classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+/* ─── Validate inputs ─── */
+function validate() {
+  const t = parseInt(inputTime.value, 10);
+  const c = parseInt(inputCount.value, 10);
+  let ok = true;
+  errTime.classList.toggle('show', !(t >= 1 && t <= 300));
+  errCount.classList.toggle('show', !(c >= 1 && c <= QUESTION_BANK.length));
+  if (!(t >= 1 && t <= 300)) ok = false;
+  if (!(c >= 1 && c <= QUESTION_BANK.length)) ok = false;
+  return ok;
+}
+
+/* ─── Helpers ─── */
+// Normalize answer to always be a sorted array of strings
+function normalizeAnswer(answer) {
+  return Array.isArray(answer) ? [...answer].sort() : [answer];
+}
+
+// Is a question multi-select?
+function isMulti(q) {
+  return Array.isArray(q.answer) && q.answer.length > 1;
+}
+
+// Check if user's selected set matches the correct answers exactly
+function checkCorrect(q, selectedSet, shuffledOpts) {
+  const correct = normalizeAnswer(q.answer);
+  const selected = [...selectedSet].map(idx => shuffledOpts[idx]).sort();
+  if (correct.length !== selected.length) return false;
+  return correct.every((a, i) => a === selected[i]);
+}
+
+/* ─── Start quiz ─── */
+function startQuiz() {
+  if (!validate()) return;
+  const t = parseInt(inputTime.value, 10);
+  const c = parseInt(inputCount.value, 10);
+
+  state.questions    = shuffle(QUESTION_BANK).slice(0, c);
+  // answers is now an array of Sets (for multi-select support)
+  state.answers      = state.questions.map(() => new Set());
+  state.shuffledOpts = state.questions.map(q => shuffle(q.options));
+  state.current      = 0;
+  state.totalTime    = t * 60;
+  state.timeLeft     = t * 60;
+
+  showScreen('quiz');
+  renderQuestion();
+  startTimer();
+}
+
+/* ─── Render current question ─── */
+function renderQuestion() {
+  const i   = state.current;
+  const q   = state.questions[i];
+  const tot = state.questions.length;
+  const pct = Math.round(((i + 1) / tot) * 100);
+  const multi = isMulti(q);
+
+  // Progress
+  progText.textContent  = `Question ${i + 1} of ${tot}`;
+  progPct.textContent   = `${pct}%`;
+  progFill.style.width  = `${pct}%`;
+  qNumber.textContent   = `QUESTION ${i + 1} OF ${tot}`;
+  qText.textContent     = q.q;
+
+  // Multi-select hint
+  const existingHint = document.getElementById('multi-hint');
+  if (existingHint) existingHint.remove();
+  if (multi) {
+    const hint = document.createElement('div');
+    hint.id = 'multi-hint';
+    hint.className = 'multi-hint';
+    hint.textContent = `✦ Select all ${q.answer.length} correct answers`;
+    qText.insertAdjacentElement('afterend', hint);
+  }
+
+  // Options
+  qOptions.innerHTML = '';
+  const keys = ['A','B','C','D','E','F'];
+  const selectedSet = state.answers[i];
+
+  state.shuffledOpts[i].forEach((opt, idx) => {
+    const div = document.createElement('div');
+    div.className = 'option' + (selectedSet.has(idx) ? ' selected' : '');
+    const keyCls = multi ? 'option-key checkbox' : 'option-key';
+    const keyIcon = multi ? (selectedSet.has(idx) ? '✓' : '') : keys[idx];
+    div.innerHTML = `<div class="${keyCls}" id="key-${idx}">${keyIcon}</div><div class="option-text">${opt}</div>`;
+    div.addEventListener('click', () => selectAnswer(idx, multi));
+    qOptions.appendChild(div);
+  });
+
+  // Nav buttons
+  btnPrev.style.display    = i === 0 ? 'none' : '';
+  btnNext.style.display    = i === tot - 1 ? 'none' : '';
+  btnSubmit.style.display  = i === tot - 1 ? '' : 'none';
+}
+
+/* ─── Select answer ─── */
+function selectAnswer(idx, multi) {
+  const i = state.current;
+  const selectedSet = state.answers[i];
+
+  if (multi) {
+    // Toggle this option in/out of the set
+    if (selectedSet.has(idx)) {
+      selectedSet.delete(idx);
+    } else {
+      selectedSet.add(idx);
+    }
+  } else {
+    // Single select: clear and set only this one
+    selectedSet.clear();
+    selectedSet.add(idx);
+  }
+
+  // Re-render options in place (don't re-render whole question — avoids flicker)
+  const optEls = document.querySelectorAll('.option');
+  const keys = ['A','B','C','D','E','F'];
+  optEls.forEach((el, j) => {
+    const isSelected = selectedSet.has(j);
+    el.classList.toggle('selected', isSelected);
+    const keyEl = el.querySelector('.option-key');
+    if (keyEl && keyEl.classList.contains('checkbox')) {
+      keyEl.textContent = isSelected ? '✓' : '';
+    }
+  });
+}
+
+/* ─── Navigation ─── */
+btnPrev.addEventListener('click', () => { if (state.current > 0) { state.current--; renderQuestion(); } });
+btnNext.addEventListener('click', () => { if (state.current < state.questions.length - 1) { state.current++; renderQuestion(); } });
+btnSubmit.addEventListener('click', finishQuiz);
+btnStart.addEventListener('click', startQuiz);
+btnRetry.addEventListener('click', () => { clearInterval(state.timerID); showScreen('start'); });
+
+/* ─── Timer ─── */
+function startTimer() {
+  clearInterval(state.timerID);
+  updateTimerDisplay();
+  state.timerID = setInterval(() => {
+    state.timeLeft--;
+    updateTimerDisplay();
+    if (state.timeLeft <= 0) { clearInterval(state.timerID); finishQuiz(); }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(state.timeLeft / 60).toString().padStart(2,'0');
+  const s = (state.timeLeft % 60).toString().padStart(2,'0');
+  timerDisplay.textContent = `${m}:${s}`;
+  timerDisplay.classList.toggle('warning', state.timeLeft <= 60);
+}
+
+/* ─── Finish & show results ─── */
+function finishQuiz() {
+  clearInterval(state.timerID);
+
+  let correct = 0, wrong = 0, skipped = 0;
+  const reviewItems = [];
+
+  state.questions.forEach((q, i) => {
+    const selectedSet = state.answers[i];
+    const isSkipped   = selectedSet.size === 0;
+    const isCorrect   = !isSkipped && checkCorrect(q, selectedSet, state.shuffledOpts[i]);
+
+    if (isSkipped) skipped++;
+    else if (isCorrect) correct++;
+    else wrong++;
+
+    if (!isCorrect) {
+      const cls    = isSkipped ? 'skip-item' : 'wrong-item';
+      const sLabel = isSkipped ? 'SKIPPED' : '✗ INCORRECT';
+      const sCls   = isSkipped ? 'status-skip' : 'status-wrong';
+
+      const correctAnswers = normalizeAnswer(q.answer);
+      const correctHTML = correctAnswers.map(a => `<span class="review-tag correct-tag">${a}</span>`).join('');
+
+      let userHTML;
+      if (isSkipped) {
+        userHTML = '<em style="color:var(--muted)">Not answered</em>';
+      } else {
+        const selectedAnswers = [...selectedSet].map(idx => state.shuffledOpts[i][idx]);
+        userHTML = selectedAnswers.map(a => `<span class="review-tag wrong-tag">${a}</span>`).join('');
+      }
+
+      reviewItems.push(`
+      <div class="review-item ${cls}">
+        <div class="review-status ${sCls}">${sLabel}</div>
+        <div class="review-q">${i+1}. ${q.q}</div>
+        <div class="review-answers">
+          <div class="review-ans"><span class="lbl">Your answer:</span><span class="val">${userHTML}</span></div>
+          <div class="review-ans"><span class="lbl">Correct:</span><span class="val">${correctHTML}</span></div>
+        </div>
+      </div>`);
+    }
+  });
+
+  const reviewHTML = reviewItems.length
+    ? reviewItems.join('')
+    : '<div style="text-align:center;padding:40px 0;color:var(--correct);font-family:var(--mono);font-size:1rem;">🎉 Perfect score! No incorrect answers to review.</div>';
+
+  const total = state.questions.length;
+  const pct   = Math.round((correct / total) * 100);
+  const pass  = pct >= 70;
+
+  document.getElementById('score-pct').textContent    = `${pct}%`;
+  document.getElementById('result-title').textContent = pass ? '🎉 You Passed!' : 'Keep Practicing';
+  document.getElementById('result-subtitle').textContent = `You scored ${correct} out of ${total} questions. ${pass ? 'Well done!' : 'Aim for 70% or higher to pass.'}`;
+  document.getElementById('stat-correct').textContent = `${correct} Correct`;
+  document.getElementById('stat-wrong').textContent   = `${wrong} Incorrect`;
+  document.getElementById('stat-skip').textContent    = `${skipped} Skipped`;
+  document.getElementById('review-list').innerHTML    = reviewHTML;
+
+  const needsReview = wrong + skipped;
+  const heading = document.getElementById('review-heading');
+  if (heading) heading.textContent = needsReview > 0
+    ? `// ${needsReview} QUESTION${needsReview > 1 ? 'S' : ''} TO REVIEW`
+    : '// REVIEW';
+
+  const circumference = 2 * Math.PI * 78;
+  const offset = circumference - (pct / 100) * circumference;
+  const ring = document.getElementById('ring-arc');
+  ring.style.strokeDasharray  = circumference;
+  ring.style.strokeDashoffset = circumference;
+  setTimeout(() => { ring.style.strokeDashoffset = offset; }, 200);
+
+  const msgEl = document.getElementById('personal-msg-text');
+  if (pct >= 90)      msgEl.textContent = "Keep going sakhi , me aahe tuzya sobat in every step of yours. Chan Practice kar. All the best my sakhuu...🌟";
+  else if (pct >= 70) msgEl.textContent = "Nice work — you passed! Review the questions you missed, especially around IAM, pricing models, and the shared responsibility model, and you'll ace the real exam.";
+  else if (pct >= 50) msgEl.textContent = "You're building a solid foundation. Focus on reviewing AWS core services, billing, and the Well-Architected Framework. Practice makes perfect!";
+  else                msgEl.textContent = "Don't be discouraged — every attempt helps you learn. Start with the AWS Cloud Practitioner Essentials course and revisit the question bank. You've got this! ";
+
+  showScreen('result');
+  inputCount.max = QUESTION_BANK.length;
+}
+</script>
+</body>
+</html>
